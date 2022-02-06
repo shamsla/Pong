@@ -1,5 +1,6 @@
 import { RefObject, useEffect, useRef } from 'react'
 import useBallMovement from './useBallMovement'
+import usePaddleAi from './usePaddleAi'
 import usePaddleMovement from './usePaddleMovement'
 
 interface Props {
@@ -26,18 +27,33 @@ export default function usePlayground({
 
   const { setPosition: setUserPaddlePosition, getBoundingRect: getUserPaddleRect } = usePaddleMovement({
     paddleRef: userPaddleRef,
-    getPlaygroundRect,
+  })
+  const {
+    setPosition: setRemotePaddlePosition,
+    getPosition: getRemotePaddlePosition,
+    getBoundingRect: getRemotePaddleRect,
+  } = usePaddleMovement({
+    paddleRef: remotePaddleRef,
   })
 
   const {
     update: updateBall,
     getBoundingRect: getBallBoundingRect,
     resetMovement: resetBallMovement,
+    getY: getBallYPosition,
+    incrementBallVelocity,
   } = useBallMovement({
     ballRef,
     getPlaygroundRect,
     getUserPaddleRect,
-    getRemotePaddleRect: () => remotePaddleRef.current!.getBoundingClientRect(),
+    getRemotePaddleRect,
+    maximumVelocity: 0.13,
+  })
+
+  const { update: updateRemotePaddle } = usePaddleAi({
+    getBallPosition: getBallYPosition,
+    getPaddlePosition: getRemotePaddlePosition,
+    updatePaddlePosition: setRemotePaddlePosition,
   })
 
   const manageGameStatus = () => {
@@ -51,8 +67,8 @@ export default function usePlayground({
       if (isRemoteLose) onUserWin()
       else onRemoteWin()
 
-      // reset the ball
-      resetBallMovement()
+      // increasing ball velocity on every lose
+      incrementBallVelocity()
     }
   }
 
@@ -61,6 +77,7 @@ export default function usePlayground({
       const delta = time - lastTimeRef.current
 
       updateBall(delta)
+      updateRemotePaddle(delta)
       manageGameStatus()
     }
 

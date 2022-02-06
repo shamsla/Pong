@@ -6,11 +6,18 @@ interface Props {
   getPlaygroundRect: () => DOMRect
   getUserPaddleRect: () => DOMRect
   getRemotePaddleRect: () => DOMRect
+  maximumVelocity: number
 }
 
-export default function useBallMovement({ ballRef, getPlaygroundRect, getUserPaddleRect, getRemotePaddleRect }: Props) {
+export default function useBallMovement({
+  ballRef,
+  getPlaygroundRect,
+  getUserPaddleRect,
+  getRemotePaddleRect,
+  maximumVelocity,
+}: Props) {
   const directionRef = useRef({ x: 0, y: 0 })
-  const velocityRef = useRef(0.07)
+  const velocityRef = useRef(0.1)
 
   const getX = (): number => {
     return parseFloat(getComputedStyle(ballRef.current!).getPropertyValue('--x'))
@@ -26,6 +33,10 @@ export default function useBallMovement({ ballRef, getPlaygroundRect, getUserPad
   }
 
   const getBoundingRect = () => ballRef.current!.getBoundingClientRect()
+
+  const incrementBallVelocity = () => {
+    if (velocityRef.current < maximumVelocity) velocityRef.current = velocityRef.current += 0.0008
+  }
 
   const resetMovement = () => {
     setX(50)
@@ -56,6 +67,11 @@ export default function useBallMovement({ ballRef, getPlaygroundRect, getUserPad
     if (ballRect.bottom >= getPlaygroundRect().bottom || ballRect.top <= getPlaygroundRect().top) {
       directionRef.current = { ...directionRef.current, y: directionRef.current.y * -1 }
     }
+
+    if (ballRect.right >= getPlaygroundRect().right || ballRect.left <= getPlaygroundRect().left) {
+      directionRef.current = { ...directionRef.current, x: directionRef.current.x * -1 }
+    }
+
     if (isCollision(getRemotePaddleRect(), ballRect) || isCollision(getUserPaddleRect(), ballRect)) {
       directionRef.current = { ...directionRef.current, x: directionRef.current.x * -1 }
     }
@@ -65,5 +81,5 @@ export default function useBallMovement({ ballRef, getPlaygroundRect, getUserPad
     resetMovement()
   }, [])
 
-  return { update, getBoundingRect, resetMovement }
+  return { update, getBoundingRect, resetMovement, getY, incrementBallVelocity }
 }

@@ -1,15 +1,10 @@
-import { RefObject, useEffect, useRef } from 'react'
-import { getRandomNumberBetween } from 'utils'
+import { RefObject } from 'react'
 
 interface Props {
   paddleRef: RefObject<HTMLDivElement>
-  getPlaygroundRect: () => DOMRect
 }
 
-export default function usePaddleMovement({ paddleRef, getPlaygroundRect }: Props) {
-  const positionRef = useRef(50)
-  const velocityRef = useRef(0.04)
-
+export default function usePaddleMovement({ paddleRef }: Props) {
   const getPosition = (): number => {
     return parseFloat(getComputedStyle(paddleRef.current!).getPropertyValue('--position'))
   }
@@ -19,7 +14,5 @@ export default function usePaddleMovement({ paddleRef, getPlaygroundRect }: Prop
 
   const getBoundingRect = () => paddleRef.current!.getBoundingClientRect()
 
-  const update = (delta: number) => {}
-
-  return { update, setPosition, getBoundingRect }
+  return { setPosition, getBoundingRect, getPosition }
 }

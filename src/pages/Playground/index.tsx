@@ -1,5 +1,5 @@
 import usePlayground from 'hooks/usePlayground'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FC } from 'react'
 
 import { Wrapper, PlaygroundMain, Players, Player, Paddle, Ball, CenterLine } from './styles'
@@ -13,21 +13,50 @@ const Playground: FC = () => {
   const [userScore, setUserScore] = useState(0)
   const [remoteScore, setRemoteScore] = useState(0)
 
-  const onUserWin = () => setUserScore(prev => prev + 1)
-  const onRemoteWin = () => setRemoteScore(prev => prev + 1)
+  const [isUserLose, setIsUserLose] = useState(true)
+  const [isRemoteLose, setIsRemoteLose] = useState(true)
+
+  const onUserWin = () => {
+    setIsRemoteLose(true)
+    setUserScore(prev => prev + 1)
+  }
+  const onRemoteWin = () => {
+    setIsUserLose(true)
+    setRemoteScore(prev => prev + 1)
+  }
 
   // core playground logic here
   usePlayground({ ballRef, userPaddleRef, remotePaddleRef, playgroundRef, onUserWin, onRemoteWin })
 
+  useEffect(() => {
+    let timeout: NodeJS.Timeout
+
+    if (isUserLose) {
+      timeout = setTimeout(() => setIsUserLose(false), 500)
+    }
+
+    return () => clearTimeout(timeout)
+  }, [isUserLose])
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout
+
+    if (isRemoteLose) {
+      timeout = setTimeout(() => setIsRemoteLose(false), 500)
+    }
+
+    return () => clearTimeout(timeout)
+  }, [isRemoteLose])
+
   return (
     <Wrapper>
-      <PlaygroundMain ref={playgroundRef}>
+      <PlaygroundMain isRightRed={isRemoteLose} isLeftRed={isUserLose} ref={playgroundRef}>
         <Players>
           <Player>
-            <p>ShAms : {userScore}</p>
+            <p>{userScore}</p>
           </Player>
           <Player>
-            <p>Remote : {remoteScore}</p>
+            <p>{remoteScore}</p>
           </Player>
         </Players>
 
